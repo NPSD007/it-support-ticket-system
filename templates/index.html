@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}All Tickets{% endblock %}
+
+{% block content %}
+<header class="page-head reveal">
+  <h1 class="page-title gradient-text">Support Tickets</h1>
+  <p class="subtitle">Track, search and manage IT support requests.</p>
+</header>
+
+<!-- Stat cards: app.py passes the counters as `counts` -->
+<section class="stats-grid" aria-label="Ticket summary">
+  <article class="glass stat-card stat-total reveal">
+    <span class="stat-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+    </span>
+    <div class="stat-value">{{ counts['Total'] }}</div>
+    <div class="stat-label">Total</div>
+  </article>
+
+  <article class="glass stat-card stat-open reveal">
+    <span class="stat-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>
+    </span>
+    <div class="stat-value">{{ counts['Open'] }}</div>
+    <div class="stat-label">Open</div>
+  </article>
+
+  <article class="glass stat-card stat-inprogress reveal">
+    <span class="stat-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/></svg>
+    </span>
+    <div class="stat-value">{{ counts['In Progress'] }}</div>
+    <div class="stat-label">In Progress</div>
+  </article>
+
+  <article class="glass stat-card stat-resolved reveal">
+    <span class="stat-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="8 12.5 11 15.5 16 9"/></svg>
+    </span>
+    <div class="stat-value">{{ counts['Resolved'] }}</div>
+    <div class="stat-label">Resolved</div>
+  </article>
+
+  <article class="glass stat-card stat-closed reveal">
+    <span class="stat-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+    </span>
+    <div class="stat-value">{{ counts['Closed'] }}</div>
+    <div class="stat-label">Closed</div>
+  </article>
+</section>
+
+<section class="toolbar" aria-label="Search and filter tickets">
+  <!-- Keyword search: category + description -->
+  <form class="glass panel reveal" method="get" action="{{ url_for('search') }}">
+    <div class="panel-head">
+      <h2 class="panel-title">Search Tickets</h2>
+    </div>
+    <label class="field-label" for="q">Keyword (category or description)</label>
+    <div class="search-row">
+      <div class="input-icon-wrap">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="input" type="text" id="q" name="q" value="{{ keyword }}" maxlength="100" placeholder="e.g. printer, VPN, password">
+      </div>
+      {% if selected_priority %}<input type="hidden" name="priority" value="{{ selected_priority }}">{% endif %}
+      {% if selected_status %}<input type="hidden" name="status" value="{{ selected_status }}">{% endif %}
+      <button class="btn" type="submit">Search</button>
+    </div>
+    <p class="help">Matches the category and the description. Use several words to narrow the results.</p>
+  </form>
+
+  <!-- Assigned variation: filter by priority OR status -->
+  <form class="glass panel reveal" method="get" action="{{ url_for('filter_tickets') }}">
+    <div class="panel-head">
+      <h2 class="panel-title">Filter by Priority or Status</h2>
+      <span class="variation-badge">Assigned Variation</span>
+    </div>
+    <div class="filter-grid">
+      <div>
+        <label class="field-label" for="priority">Priority</label>
+        <select class="select" id="priority" name="priority">
+          <option value="">All priorities</option>
+          {% for p in priorities %}
+          <option value="{{ p }}" {{ 'selected' if p == selected_priority }}>{{ p }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="field-label" for="status">Status</label>
+        <select class="select" id="status" name="status">
+          <option value="">All statuses</option>
+          {% for s in statuses %}
+          <option value="{{ s }}" {{ 'selected' if s == selected_status }}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button class="btn btn-primary" type="submit">Apply Filter</button>
+    </div>
+    {% if keyword %}<input type="hidden" name="q" value="{{ keyword }}">{% endif %}
+    <p class="help">Choose a priority, a status, or both. Leave a dropdown on &ldquo;All&rdquo; to ignore it.</p>
+  </form>
+</section>
+
+<div class="results-head reveal">
+  <p class="result-info">
+    Showing <strong>{{ tickets|length }}</strong> of <strong>{{ counts['Total'] }}</strong> tickets
+    {% if keyword or selected_priority or selected_status %}
+      &middot; Active:
+      {% if keyword %}<span class="chip">Keyword: {{ keyword }}</span>{% endif %}
+      {% if selected_priority %}<span class="chip">Priority: {{ selected_priority }}</span>{% endif %}
+      {% if selected_status %}<span class="chip">Status: {{ selected_status }}</span>{% endif %}
+      <a class="clear-link" href="{{ url_for('index') }}">Clear all</a>
+    {% endif %}
+  </p>
+  <a class="btn btn-primary" href="{{ url_for('create') }}">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    New Ticket
+  </a>
+</div>
+
+{% if tickets %}
+<div class="ticket-table" role="table" aria-label="Support tickets">
+  <div class="ticket-head ticket-grid" role="row">
+    <div role="columnheader">ID</div>
+    <div role="columnheader">Category</div>
+    <div role="columnheader">Description</div>
+    <div role="columnheader">Priority</div>
+    <div role="columnheader">Status</div>
+    <div role="columnheader">Created (UTC)</div>
+    <div role="columnheader" class="ta-right">Actions</div>
+  </div>
+
+  <div class="ticket-list" role="rowgroup">
+    {% for ticket in tickets %}
+    <div class="ticket-row ticket-grid glass reveal prio-{{ ticket.priority|lower }}" role="row">
+      <div class="c-id ticket-id" role="cell">{{ ticket.id|ticket_ref }}</div>
+      <div class="c-cat ticket-cat" role="cell" data-label="Category">{{ ticket.category }}</div>
+      <div class="c-desc ticket-desc" role="cell">{{ ticket.description }}</div>
+      <div class="c-prio" role="cell" data-label="Priority"><span class="badge badge-priority">{{ ticket.priority }}</span></div>
+      <div class="c-status" role="cell" data-label="Status"><span class="badge badge-status st-{{ ticket.status|lower|replace(' ', '-') }}">{{ ticket.status }}</span></div>
+      <div class="c-date ticket-date" role="cell" data-label="Created (UTC)">{{ ticket.created_at }}</div>
+      <div class="c-actions row-actions" role="cell">
+        {% if ticket.status in next_status %}
+        <form method="post" action="{{ url_for('update_status', ticket_id=ticket.id) }}">
+          <input type="hidden" name="new_status" value="{{ next_status[ticket.status] }}">
+          <input type="hidden" name="next" value="{{ request.full_path }}">
+          <button class="icon-btn" type="submit" title="Mark {{ next_status[ticket.status] }}" aria-label="Mark {{ ticket.id|ticket_ref }} as {{ next_status[ticket.status] }}">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          </button>
+        </form>
+        {% endif %}
+        {% if ticket.status in reopenable %}
+        <form method="post" action="{{ url_for('reopen_ticket', ticket_id=ticket.id) }}">
+          <input type="hidden" name="next" value="{{ request.full_path }}">
+          <button class="icon-btn icon-btn-reopen" type="submit" title="Reopen ticket" aria-label="Reopen ticket {{ ticket.id|ticket_ref }}">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+          </button>
+        </form>
+        {% endif %}
+        {% if ticket.status != 'Closed' %}
+        <form method="post" action="{{ url_for('close_ticket', ticket_id=ticket.id) }}"
+              onsubmit="return confirm('Close ticket {{ ticket.id|ticket_ref }}?');">
+          <input type="hidden" name="next" value="{{ request.full_path }}">
+          <button class="icon-btn icon-btn-danger" type="submit" title="Close ticket" aria-label="Close ticket {{ ticket.id|ticket_ref }}">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% else %}
+<div class="glass empty reveal">
+  <div class="empty-icon" aria-hidden="true">
+    <svg viewBox="0 0 24 24"><path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V8z"/><path d="M14 6v2M14 11v2M14 16v2"/></svg>
+  </div>
+  <h2>No tickets found</h2>
+  <p class="muted">
+    {% if keyword or selected_priority or selected_status %}
+      Try a different keyword or <a href="{{ url_for('index') }}">clear the filters</a>.
+    {% else %}
+      Nothing here yet. <a href="{{ url_for('create') }}">Create the first ticket</a> to get started.
+    {% endif %}
+  </p>
+</div>
+{% endif %}
+{% endblock %}

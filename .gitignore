@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Local databases (the real database lives on the Podman volume)
+*.db
+*.sqlite
+*.sqlite3
+data/
+
+# Environment and secrets
+.env
+*.env
+
+# Exported container images and logs
+*.tar
+*.log
+
+# Editors and operating systems
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db

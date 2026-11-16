@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}New Ticket{% endblock %}
+{% block body_class %}page-create{% endblock %}
+
+{% block content %}
+<div class="create-wrap">
+  <!-- Decorative background blobs (purely visual) -->
+  <div class="blob blob-blue" aria-hidden="true"></div>
+  <div class="blob blob-purple" aria-hidden="true"></div>
+  <div class="blob blob-cyan" aria-hidden="true"></div>
+
+  <section class="glass form-card reveal" aria-labelledby="create-title">
+    <header class="form-head">
+      <h1 id="create-title" class="page-title gradient-text">Create New Ticket</h1>
+      <p class="subtitle">
+        Describe the issue and choose a priority. The ticket ID and timestamp are generated
+        automatically, and new tickets start as <strong>Open</strong>.
+      </p>
+    </header>
+
+    <form method="post" action="{{ url_for('create') }}">
+      <div class="form-grid">
+        <div class="form-row">
+          <label class="field-label" for="category">Category</label>
+          <select class="select" id="category" name="category" required>
+            <option value="" disabled {{ 'selected' if not form.get('category') }}>Select a category&hellip;</option>
+            {% for c in categories %}
+            <option value="{{ c }}" {{ 'selected' if form.get('category') == c }}>{{ c }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label class="field-label" for="priority">Priority</label>
+          <select class="select" id="priority" name="priority" required>
+            {% for p in priorities %}
+            <option value="{{ p }}" {{ 'selected' if p == (form.get('priority') or 'Medium') }}>{{ p }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label class="field-label" for="description">Description</label>
+        <textarea class="textarea" id="description" name="description" rows="6" maxlength="2000" required
+                  placeholder="What is happening? Include error messages, affected devices and when it started.">{{ form.get('description', '') }}</textarea>
+      </div>
+
+      <button class="btn btn-primary btn-lg btn-shimmer" type="submit">Submit Ticket</button>
+      <a class="cancel-link" href="{{ url_for('index') }}">Cancel and return to all tickets</a>
+    </form>
+  </section>
+</div>
+{% endblock %}
