@@ -287,21 +287,6 @@ podman volume rm tickets-data       # DELETES all ticket data permanently
 podman rmi it-support-tickets:v1.0  # remove the local image
 ```
 
-## Capstone Screenshot Checklist
-
-| # | Command / action | Evidence to capture |
-|---|---|---|
-| 1 | `podman build -t it-support-tickets:v1.0 .` then `podman images` | Successful build and image listing |
-| 2 | `podman volume create tickets-data` then `podman volume ls` | Volume exists |
-| 3 | `podman network create tickets-net` then `podman network ls` | Network exists |
-| 4 | `podman run ...` then `podman ps` | Container running with port `8080->5000` |
-| 5 | Browser: create, search, filter, change status, close, reopen | Working application |
-| 6 | `podman inspect ticket-system` | Mounts, network and ports |
-| 7 | `podman logs ticket-system` | Start-up and request log |
-| 8 | Stop, remove, re-run, reload the page | Data persisted |
-| 9 | `podman tag` and `podman push` | Image on the registry |
-| 10 | `podman pull` | Image downloaded from the registry |
-
 ## Notes and Limitations
 
 - The container runs Flask's built-in development server, which is fine for a capstone demo or small internal use. For heavier traffic put the app behind a production WSGI server such as Gunicorn.
